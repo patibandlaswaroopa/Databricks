@@ -1,0 +1,136 @@
+# Databricks notebook source
+# DBTITLE 1,ACTIONS
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.appName("Example1").getOrCreate()
+sc =  spark.sparkContext
+
+# COMMAND ----------
+
+numbers = sc.parallelize([1,2,3,4])
+n = type(numbers)
+result= numbers.collect()
+c = numbers.count()
+print(result)
+print(n)
+print(c)
+
+# COMMAND ----------
+
+f = numbers.first()
+t = numbers.take(4)
+o = numbers.takeOrdered(3)
+print(f)
+print(t)
+print(o)
+
+# COMMAND ----------
+
+sample1 = sc.textFile('sample.txt')
+print(sample1)
+
+# COMMAND ----------
+
+# DBTITLE 1,TRANSFORMATIONS
+#THE JOB WILL BE INTIATED ONLY WHEN THE ACTIONS HAS BEEN TRIGGERED UNLESS THE ACTIONS NOT BE TRIGGERED  TRANSFORMATIONS THE RDDS WILL GET CREATED.
+
+# COMMAND ----------
+
+num = sc.parallelize([23,45,66,75,12])
+s = num.takeSample('True',4,seed = 5) # it will retrive different results
+l =num.takeSample('True',4,seed =5)
+print(l)
+print(s)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC GLOM
+# MAGIC
+# MAGIC
+# MAGIC
+# MAGIC CATEGORIZE THE RDDS INTO TUPLES
+# MAGIC
+
+# COMMAND ----------
+
+NUM1 = sc.parallelize([34,5,6,12,73],3)
+
+NUM1.glom().collect()
+
+
+# COMMAND ----------
+
+default_partitions = sc.defaultMinPartitions
+print(default_partitions)
+
+# COMMAND ----------
+
+# DBTITLE 1,REDUCE AND FOLD
+num3 = sc.parallelize(range(1,5))
+#lambda --- A function with know name is called lambda 
+num3.reduce(lambda x,y : x+y)
+
+# COMMAND ----------
+
+num4 = sc.parallelize([2,4,1,5],2)
+num4.fold(1,lambda x,y : x+y)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC TRANSFORMATION
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
+# DBTITLE 1,MAP
+names = sc.parallelize(['anil','kirn','sathya','charn'])
+names.map(lambda x : 'Mr. '+x).collect()
+
+
+# COMMAND ----------
+
+names.flatMap(lambda x : 'Mr. '+x).collect()
+
+# COMMAND ----------
+
+m = names.map(lambda x:(x,67)).collect()
+n = names.flatMap(lambda x:(x,67)).collect()
+print(m)
+print(n)
+
+# COMMAND ----------
+
+# DBTITLE 1,filter
+num3.filter(lambda x:x>2).collect()
+
+# COMMAND ----------
+
+# DBTITLE 1,union
+num3.union(num4).collect()
+
+# COMMAND ----------
+
+# DBTITLE 1,INTERSECTION
+num3.intersection(num4).collect()
+
+# COMMAND ----------
+
+# DBTITLE 1,REDUCEBYKEY
+integers = sc.parallelize([(1,2),(3,3),(4,5),(6,7)])
+integers.reduceByKey(lambda x,y : x>2).collect()
+
+# COMMAND ----------
+
+# DBTITLE 1,GROUPBY
+s =integers.groupByKey().collect()
+for k,v in s:
+    print(k,list(v))
+
+
+
+# COMMAND ----------
+
+result = integers.groupByKey().mapValues(max)
+result.collect()
