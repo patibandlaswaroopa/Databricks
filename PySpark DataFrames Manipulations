@@ -1,0 +1,134 @@
+# Databricks notebook source
+
+
+# DBTITLE
+ =====================1,Repartion and coalesce========================
+
+
+rdd2 = sc.parallelize(range(1,8))
+rdd1_repartition = rdd2.repartition(4)
+rdd_coalesce = rdd2.coalesce(3)
+rdd_coalesce.glom().collect()
+
+# COMMAND ----------
+
+# DBTITLE 1,
+======================================Aggregate=============================
+t1 = lambda x,y : x+y
+t2 = lambda x,y : x+y+1
+agg = rdd_coalesce.aggregate(0,t1,t2)
+print(agg)
+
+
+# COMMAND ----------
+
+rdd_coalesce.reduce(lambda x,y : x+y+1)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ==================================DATAFRAMES===============================
+
+# COMMAND ----------
+
+data = ([1,'anil',34],
+        [2,'sathya',33],
+        [1,'kiran',35],
+        [1,'kumar',33],
+        [1,'kranthi',22]
+        )
+schema = ('ID','name','age')
+df = spark.createDataFrame(data = data,schema = schema)
+df.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,
+===========================EMPTY RDD=====================
+empty_rdd = sc.parallelize([])
+df_empty = empty_rdd.toDF()
+
+# COMMAND ----------
+
+# DBTITLE 1,
+====================Schema with dataframe==================================
+from pyspark.sql.types import StructField,StructType,IntegerType,StringType
+
+
+columns = StructType([StructField('name',StringType(),True),
+                      StructField('Salary',IntegerType(),True)
+                      ])
+empty_rdd_schema = spark.createDataFrame(empty_rdd, columns)
+
+
+# COMMAND ----------
+
+data = ([1,'anil',34],
+        [2,'sathya',33],
+        [1,'kiran',35],
+        [1,'kumar',33],
+        [1,'kranthi',22]
+        )
+columns = StructType([StructField('ID',IntegerType(),True),
+                      StructField('name',StringType(),True),
+                       StructField('salary',IntegerType(),True)
+                      ])
+empty_rdd_schema = spark.createDataFrame(data, columns) 
+df.show()  
+df.printSchema()    
+
+# COMMAND ----------
+
+# DBTITLE 1,
+===========================RANGE========================
+df_1 = spark.range(1,3).toDF("numbers")
+df_1.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,
+==============================ROWS============================
+ROW = df.collect()
+for x in ROW:
+    print(x)
+
+# COMMAND ----------
+
+s = df.filter(df.age>30)
+s.show()
+
+# COMMAND ----------
+
+row = df.collect()
+print(row)
+
+# COMMAND ----------
+
+t =df.take(2)
+print(t)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC =======================COLUMN FUNCTION========================
+
+# COMMAND ----------
+
+# DBTITLE 1,
+=====================================lit===============================
+from pyspark.sql.functions import lit,col
+df_addcol =df.withColumn("country",lit('USA'))
+df_addcol.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,
+=======================================col()=========================
+
+df_addcol.select(col("name")).show()
+
+# COMMAND ----------
+
+# DBTITLE 1,
+==========================sorting=====================================
+df_addcol.sort(df.name.asc_nulls_last()).show()
