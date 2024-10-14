@@ -1,0 +1,265 @@
+# Databricks notebook source
+
+from pyspark.sql import SparkSession
+spark =SparkSession.builder.appName("example1").getOrCreate()
+sc = spark.sparkContext
+
+# COMMAND ----------
+
+from pyspark.sql.types import StructType,StructField,StringType,IntegerType
+data = [('john',43,45000),
+        ('joe',56,7000)]
+df = spark.createDataFrame(data).toDF('Name','Age','salary')
+df.show()
+
+# COMMAND ----------
+
+r = df.rdd.getNumPartitions()
+print(r)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ======================UNSTRUCTURE  DATA================
+
+# COMMAND ----------
+
+df_sample = spark.read.csv("/FileStore/Databricks1-1.csv",header=True,inferSchema=True)
+df_sample.show()
+#df_sample_data.show()
+
+# COMMAND ----------
+
+df_sample_data = df_sample.toDF('ID', 'Name', 'Age', 'Salary')
+df_sample_data.show()
+
+# COMMAND ----------
+
+df_sample.withColumnRenamed("name","surname").show()
+
+# COMMAND ----------
+
+display(dbutils.fs.ls("/"))
+
+# COMMAND ----------
+
+# DBTITLE 1,
+=======================From Databricks DataSets===================
+display(dbutils.fs.ls("/FileStore/Databricks1-1.csv"))
+
+
+# COMMAND ----------
+
+# DBTITLE 1,
+===============AND and OR====================
+df_sample.filter(())
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC =============AGGREGATE FUNCTION=============
+
+# COMMAND ----------
+
+from pyspark.sql.functions import avg, collect_list, countDistinct, count_distinct
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
+=========================UDF(USER DEFINED FUNCTIONS)=========================
+
+# COMMAND ----------
+
+from pyspark.sql.functions import udf,col
+from pyspark.sql.types import IntegerType, StringType
+
+# COMMAND ----------
+
+def cube(x):
+    return x*x*x
+
+cube(2)
+
+df_udf = udf(cube,IntegerType())
+df_sample_data.select(df_udf(""),alias(),"*").show()
+
+
+# COMMAND ----------
+
+def population_size(x):
+    if x>= 20000:
+        return "Large"
+    elif x> 10000 and x<20000:
+        return "medium"
+    else:
+        return "small"
+df_size_udf = udf(population_size,StringType())
+df_udf_population = data_geo.select("*",df_size_udf("2014 population estimate").alias("population size")).show()
+
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ========================================================WINDOW FUNCTION===================================
+
+# COMMAND ----------
+
+#RANK FUNCTION--->row_number(),rank(),dense_rank()
+# AGGREGATE FUNCTION----------->sum(),avg(),max(),min()
+
+
+# COMMAND ----------
+
+# DBTITLE 1,rownumber
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number, rank, dense_rank,lead,lag
+
+# COMMAND ----------
+
+df_row = window.partionBy("state").orderBy("2014 population estimate")
+df_geo_row = data.withColumn("row_number",row_number().over(df_row)).show()
+
+# COMMAND ----------
+
+# DBTITLE 1,rank()
+df_rank = window.partitionBy("State").orderBy("2014 population estimate")
+df_sample_data = data.withColumn("rank",rank().over(df_rank)).show()
+
+# COMMAND ----------
+
+sample_data = (("james","sales",3000),
+               ("leo","marketing",6000),
+               ("sathya","sales",5000),
+               ("kiran","finace",1000),
+               ("krathu","marketing",7000)
+               )
+columns = ["emp_name","dep","sal"]
+df = spark.createDataFrame(data = sample_data,schema = columns)
+df.show()
+
+# COMMAND ----------
+
+df_rank1 = Window.partitionBy("dep").orderBy("sal")
+df_sample_rank = df.withColumn("Rank", rank().over(df_rank1)).show()
+
+# COMMAND ----------
+
+# DBTITLE 1,DENSERANK()
+df_rank = Window.partitionBy("dep").orderBy("sal")
+df_dense_rank = df.withColumn("densseRank",dense_rank().over(df_rank)).show()
+
+# COMMAND ----------
+
+# DBTITLE 1,Lag()
+from pyspark.sql.window import Window
+from pyspark.sql.functions import lag,sum,col,avg,max,min
+
+# Use the correct column name instead of 'dap', e.g., 'dep'
+df_lag = Window.partitionBy("dep").orderBy("sal")
+
+# Apply the lag function
+df_sample_log = df.withColumn("lag", lag("sal", 1).over(df_lag))
+
+# Show the result
+df_sample_log.show()
+
+
+# COMMAND ----------
+
+led = Window.partitionBy("dep").orderBy("sal")
+led_df = df.withColumn("lead",lead("sal",1).over(led))
+led_df.show()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ============WINDOWS OVER AGGREGATE FUNCTION=============
+
+# COMMAND ----------
+
+df.printSchema()
+
+
+# COMMAND ----------
+
+# Define the window specification
+df_agg = Window.partitionBy("dep")
+
+# Calculate sum, avg, max, and min, and select the desired columns
+df_aggregate = df.withColumn("sum", sum("sal").over(df_agg)) \
+                 .withColumn("avg", avg("sal").over(df_agg)) \
+                 .withColumn("max", max("sal").over(df_agg)) \
+                 .withColumn("min", min("sal").over(df_agg)) \
+                 .select("dep", "sum", "avg", "max", "min")
+
+# Show the results
+df_aggregate.show()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ================create emp table=======
+
+# COMMAND ----------
+
+emp = [ 
+       (1,"swatha",-1,10,"m",3000),
+       (1,"sathya",3,70,"f",4000),
+       (1,"kumar",5,40,"f",5000)
+       
+]
+empcol = ["empid","empname","mag_id","dept_id","gender","sal"]
+empdf = spark.createDataFrame(data=emp,schema = empcol)
+empdf.show()
+
+# COMMAND ----------
+
+dep = [
+  ("fin",10,),
+  ("mak",30),
+  ("it",29)
+]
+deptcol = ["dept_name","dept_id"]
+deptdf = spark.createDataFrame(data = dep,schema = deptcol)
+deptdf.show()
+
+# COMMAND ----------
+
+# DBTITLE 1,INNERJOIN
+df_innerjoin = empdf.join(deptdf,empdf.dept_id == deptdf.dept_id, "inner").show()
+
+# COMMAND ----------
+
+# DBTITLE 1,leftjoin
+df_leftjoin = empdf.join(deptdf,empdf.dept_id == deptdf.dept_id, "left").show()
+
+# COMMAND ----------
+
+# DBTITLE 1,RIGHT JOIN
+df_RIGHTjoin = empdf.join(deptdf,empdf.dept_id == deptdf.dept_id, "RIGHT").show()
+
+# COMMAND ----------
+
+df_RIGHTOUTERjoin = empdf.join(deptdf,empdf.dept_id == deptdf.dept_id, "RIGHTOUTER").show()
+
+# COMMAND ----------
+
+# DBTITLE 1,FULL JOIN
+df_fulljoin = empdf.join(deptdf,empdf.dept_id == deptdf.dept_id, "full").show()
+
+# COMMAND ----------
+
+# DBTITLE 1,left semi join
+left_semi_join = empdf.join(deptdf,empdf.dept_id == deptdf.dept_id, "leftsemi").show()
+
+# COMMAND ----------
+
+# DBTITLE 1,self join
+from pyspark.sql.functions import col
+
+df_self_join = empdf.alias("e1").join(empdf.alias("e2"),
+                                      col("e1.mag_id") == col("e2.empid"),
+                                      "inner").select("e1.*", "e2.*")
+
