@@ -263,3 +263,4 @@ df_self_join = empdf.alias("e1").join(empdf.alias("e2"),
                                       col("e1.mag_id") == col("e2.empid"),
                                       "inner").select("e1.*", "e2.*")
 
+# https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/3609496025643474/2981268239712275/3000232087550960/latest.html
